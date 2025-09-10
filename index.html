@@ -285,6 +285,9 @@
     <footer>
       © <span id="year"></span> Sodaro • Built with care by Bulmalinna S. — Thank you and a backlink to
       <a href="https://www.jayaproduction.com" target="_blank" rel="noopener">www.jayaproduction.com</a>
+      <small style="display:block;margin-top:8px;color:#b6c0ff;">
+  © <script>document.write(new Date().getFullYear())</script> The Future of Cyber + AI 
+</small>
     </footer>
   </main>
 
@@ -577,5 +580,83 @@
       closeBtn.addEventListener('click', closeModal);
     })();
   </script>
+
+  <script>
+  // ===== Light anti-copy guard (polite, not bulletproof) =====
+  (function(){
+    // 1) Quick toast
+    const toast = document.createElement('div');
+    toast.setAttribute('role','status');
+    toast.setAttribute('aria-live','polite');
+    Object.assign(toast.style, {
+      position:'fixed', bottom:'18px', left:'50%', transform:'translateX(-50%)',
+      background:'rgba(10,14,30,.9)', color:'#fff', padding:'10px 14px',
+      borderRadius:'12px', font:'600 14px/1.2 Inter,system-ui,sans-serif',
+      boxShadow:'0 8px 22px rgba(0,0,0,.35)', opacity:'0', pointerEvents:'none',
+      transition:'opacity .2s ease, transform .2s ease', zIndex:'2000'
+    });
+    document.body.appendChild(toast);
+
+    let toastTimer = null;
+    function ping(msg='Nope 😄 Code is © Sodaro'){
+      toast.textContent = msg;
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateX(-50%) translateY(-4px)';
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(()=>{
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(-50%) translateY(0)';
+      }, 1200);
+    }
+
+    // 2) Block right-click / context menu
+    window.addEventListener('contextmenu', (e)=>{ 
+      e.preventDefault(); 
+      ping(); 
+    });
+
+    // 3) Block common “grab the code” shortcuts
+    // (Ctrl/Cmd+S, Ctrl/Cmd+U, Ctrl/Cmd+P, Ctrl/Cmd+C on page, F12, Ctrl+Shift+I/J)
+    window.addEventListener('keydown', (e)=>{
+      const k = e.key.toLowerCase();
+      const ctrl = e.ctrlKey || e.metaKey;
+
+      // Allow inputs to behave normally
+      const tag = (document.activeElement?.tagName || '').toLowerCase();
+      const inEditable = tag === 'input' || tag === 'textarea' || document.activeElement?.isContentEditable;
+
+      // Disallow copy/print/view-source/devtools on the general page
+      if (!inEditable && (
+           (ctrl && ['s','u','p','c','x','a'].includes(k)) ||
+           (ctrl && e.shiftKey && ['i','j','c'].includes(k)) ||
+           k === 'f12'
+         )) {
+        e.preventDefault();
+        e.stopPropagation();
+        ping();
+      }
+    }, true);
+
+    // 4) Block selection+copy on the document background (keep UI clickable)
+    //    We’ll let text be selectable inside the modal or inputs.
+    document.addEventListener('copy', (e)=>{
+      const el = document.activeElement;
+      const tag = (el?.tagName || '').toLowerCase();
+      const inEditable = tag === 'input' || tag === 'textarea' || el?.isContentEditable;
+      if (!inEditable) {
+        e.preventDefault();
+        ping();
+      }
+    });
+
+    // OPTIONAL: add a subtle CSS rule to reduce selection everywhere except inputs/modals
+    const css = document.createElement('style');
+    css.textContent = `
+      body { -webkit-user-select: none; user-select: none; }
+      input, textarea, [contenteditable="true"], .modal-panel { -webkit-user-select: text; user-select: text; }
+    `;
+    document.head.appendChild(css);
+  })();
+</script>
 </body>
 </html>
