@@ -100,6 +100,7 @@
       backdrop-filter: blur(8px);
       border-radius:20px; padding:24px;
       box-shadow: 0 8px 30px rgba(0,0,0,.25);
+      text-align:center;          /* keep it centered */
     }
     header h1{
       margin:0; font-size:clamp(1.4rem, 2.2vw + 1rem, 2.4rem);
@@ -109,6 +110,16 @@
       margin:.6rem 0 0; color:var(--ink-dim);
       font-size:clamp(.95rem, .5vw + .7rem, 1.05rem);
     }
+    /* simple logo styling */
+    .sodaro-logo{
+      display:block;
+      margin:14px auto 0;
+      max-width:420px;
+      width:90%;
+      height:auto;
+      image-rendering:auto;
+    }
+
     .grid{
       display:grid; gap:20px;
       grid-template-columns:1fr;
@@ -197,6 +208,8 @@
     <header>
       <h1>Sodaro — Image Metadata Remover</h1>
       <p>Strip EXIF/metadata locally in your browser and download a clean ZIP. Created by <strong>Bulmalinna S.</strong></p>
+      <!-- just the logo, nothing fancy -->
+      <img src="sodaro.png" alt="Sodaro logo" class="sodaro-logo">
     </header>
 
     <section class="grid">
@@ -290,7 +303,7 @@
     fileInput.addEventListener('change', announceSelection);
     function announceSelection(){
       const n = fileInput.files?.length || 0;
-      setStatus(n ? `Selected ${n} file${n>1?'s':''}.` : 'No files selected.');
+   setStatus(n ? `Selected ${n} file${n>1?'s':''}.` : 'No files selected.');
     }
 
     clearBtn.addEventListener('click', () => {
