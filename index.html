@@ -100,7 +100,7 @@
       backdrop-filter: blur(8px);
       border-radius:20px; padding:24px;
       box-shadow: 0 8px 30px rgba(0,0,0,.25);
-      text-align:center;          /* keep it centered */
+      text-align:center;
     }
     header h1{
       margin:0; font-size:clamp(1.4rem, 2.2vw + 1rem, 2.4rem);
@@ -110,7 +110,6 @@
       margin:.6rem 0 0; color:var(--ink-dim);
       font-size:clamp(.95rem, .5vw + .7rem, 1.05rem);
     }
-    /* simple logo styling */
     .sodaro-logo{
       display:block;
       margin:14px auto 0;
@@ -118,6 +117,7 @@
       width:90%;
       height:auto;
       image-rendering:auto;
+      cursor: pointer; /* clickable */
     }
 
     .grid{
@@ -135,7 +135,6 @@
     }
     .label{ font-weight:600; color:var(--ink); margin-bottom:8px }
 
-    /* BIG CTA button zone */
     .drop{
       border:2px dashed var(--muted);
       border-radius:18px; padding:22px;
@@ -170,7 +169,6 @@
       transition: transform .06s ease, box-shadow .2s ease;
     }
     .btn:active{ transform: translateY(1px); box-shadow:0 3px 10px rgba(42,102,255,.25) }
-
     .muted-btn{
       background:transparent; color:var(--ink);
       border-color:var(--muted);
@@ -181,7 +179,6 @@
       word-break: break-word;
     }
 
-    /* Wave zone */
     #wave-holder { height:120px; border-radius:12px; overflow:hidden; margin-top:10px; border:1px dashed var(--muted); }
     .wave-off { display:none; }
 
@@ -201,15 +198,45 @@
     .error{ color:var(--danger) }
     footer{ text-align:center; color:var(--ink-dim); margin-top:8px; font-size:.9rem }
     footer a{ color:var(--accent-2); text-decoration:underline; }
+
+    /* ------------ Modal (accessible) ------------ */
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,.55);
+      display: none; align-items: center; justify-content: center; z-index: 1000;
+    }
+    .modal-backdrop.show { display: flex; }
+    .modal-panel {
+      background: var(--card); color: var(--ink);
+      width: min(720px, 92vw); border-radius: 16px; padding: 20px;
+      border: 1px solid rgba(255,255,255,.08); box-shadow: 0 15px 40px rgba(0,0,0,.35);
+    }
+    .modal-panel h2 { margin: 0 0 .4rem 0; font-size: 1.25rem; }
+    .modal-panel p { margin: .5rem 0; color: var(--ink-dim); line-height: 1.55; }
+    .modal-actions { margin-top: 12px; display: flex; justify-content: flex-end; gap: 8px; }
+    .modal-close {
+      appearance: none; border: 1px solid transparent; cursor: pointer;
+      border-radius: 10px; padding: 10px 14px; font-weight: 700;
+      background: linear-gradient(180deg, var(--accent), var(--accent-2));
+      color: #fff; box-shadow: 0 8px 18px rgba(42,102,255,.35);
+    }
   </style>
 </head>
 <body>
   <main class="wrap">
     <header>
       <h1>Sodaro — Image Metadata Remover</h1>
-      <p>Strip EXIF/metadata locally in your browser and download a clean ZIP. Created by <strong>Bulmalinna S.</strong></p>
-      <!-- just the logo, nothing fancy -->
-      <img src="sodaro.png" alt="Sodaro logo" class="sodaro-logo">
+      <p>Strip EXIF/metadata locally in your browser and download a clean ZIP. Created by <strong>Bullimalinna S.</strong></p>
+
+      <BR>
+      <img
+        src="sodaro.png"
+        alt="Sodaro logo"
+        class="sodaro-logo"
+        id="sodaro-logo"
+        role="button"
+        tabindex="0"
+        aria-label="Open privacy and rights statement"
+      />
     </header>
 
     <section class="grid">
@@ -221,7 +248,6 @@
           <input id="file-input" type="file" accept="image/*" multiple />
           <!-- BIG ICON CTA -->
           <button type="button" class="cta" id="cta-pick">
-            <!-- Cloud upload SVG icon -->
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <path fill="currentColor" d="M19 18a4 4 0 0 0 0-8c-.2 0-.4 0-.6.04A6 6 0 0 0 6.1 10c-.07 0-.14 0-.21 0A4.9 4.9 0 0 0 1 15a5 5 0 0 0 5 5h13zM12 7l4 4h-3v5h-2v-5H8l4-4z"/>
             </svg>
@@ -245,15 +271,12 @@
         <div class="label">Support the project</div>
         <div class="donate">
           <div class="qr">
-            <!-- Replace with your hosted QR filename/URL -->
             <img src="qrcode .png" alt="Donate via PayPal QR">
           </div>
           <div>
             <div><strong>If you want to donate, hit me up on PayPal.</strong></div>
             <div class="small">Scan the QR or click the button below.</div><br>
-           <a class="btn" href="https://paypal.me/BulliSot" target="_blank" rel="noopener noreferrer">
-  Donate via PayPal
-</a>
+            <a class="btn" href="https://paypal.me/BulliSot" target="_blank" rel="noopener noreferrer">Donate via PayPal</a>
           </div>
         </div>
       </aside>
@@ -265,11 +288,28 @@
     </footer>
   </main>
 
-  <script>
-    // ======= Robust client-side metadata remover & zipper =======
-    const MAX_MEGA_PIXELS = 40;  // ~40MP safety cap
-    const JPEG_QUALITY    = 0.92;
+  <!-- Rights & Safety Statement Modal -->
+  <div class="modal-backdrop" id="rights-modal" role="dialog" aria-modal="true" aria-labelledby="rights-title" aria-describedby="rights-body">
+    <div class="modal-panel">
+      <h2 id="rights-title">Why this matters</h2>
+      <p id="rights-body"><strong>Your photos are yours.</strong> Sodaro removes hidden metadata (e.g., GPS and device IDs) <em>locally in your browser</em>—nothing is uploaded—so you can share images without exposing your location or identity.</p>
+      <ul style="margin:.4rem 0 0 1rem; line-height:1.55">
+        <li>Protects privacy and location safety</li>
+        <li>Supports free expression without unwanted tracking</li>
+        <li>Respects freedom of association and movement online</li>
+      </ul>
+      <p style="margin:.6rem 0 0"><strong>Bottom line:</strong> Tools like Sodaro help keep our constitutional rights meaningful in the digital world.</p>
+      <div class="modal-actions">
+        <button class="modal-close" id="modal-close">Close</button>
+      </div>
+    </div>
+  </div>
 
+  <script>
+    // ===== Year stamp
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // ===== Element refs
     const fileInput    = document.getElementById('file-input');
     const dropZone     = document.getElementById('drop-zone');
     const statusEl     = document.getElementById('status');
@@ -279,13 +319,11 @@
     const waveHolder   = document.getElementById('wave-holder');
     let processingActive = false;
 
-    document.getElementById('year').textContent = new Date().getFullYear();
-
-    // --- Drag & drop UI
-    ;['dragenter','dragover'].forEach(evt => {
+    // ===== Drag & drop UI
+    ['dragenter','dragover'].forEach(evt => {
       dropZone.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); dropZone.classList.add('dragover'); });
     });
-    ;['dragleave','drop'].forEach(evt => {
+    ['dragleave','drop'].forEach(evt => {
       dropZone.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); dropZone.classList.remove('dragover'); });
     });
     dropZone.addEventListener('drop', e => {
@@ -294,24 +332,27 @@
       announceSelection();
     });
     dropZone.addEventListener('click', (e) => {
-      // If the click is inside but not on the CTA, still open picker
       if (e.target !== ctaPickBtn) fileInput.click();
     });
     dropZone.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); }
     });
     ctaPickBtn.addEventListener('click', () => fileInput.click());
-
     fileInput.addEventListener('change', announceSelection);
+
     function announceSelection(){
       const n = fileInput.files?.length || 0;
-   setStatus(n ? `Selected ${n} file${n>1?'s':''}.` : 'No files selected.');
+      setStatus(n ? `Selected ${n} file${n>1?'s':''}.` : 'No files selected.');
     }
 
     clearBtn.addEventListener('click', () => {
       fileInput.value = '';
       setStatus('Selection cleared.');
     });
+
+    // ====== Processing & ZIP
+    const MAX_MEGA_PIXELS = 40;  // ~40MP safety cap
+    const JPEG_QUALITY    = 0.92;
 
     downloadBtn.addEventListener('click', handleDownload);
 
@@ -328,7 +369,7 @@
       setStatus(`Processing ${images.length} image(s)...`);
 
       const zip = new JSZip();
-      // Process sequentially to keep memory stable
+
       for (let i = 0; i < images.length; i++){
         const file = images[i];
         try {
@@ -352,12 +393,13 @@
       });
 
       const a = document.createElement('a');
-      a.href = URL.createObjectURL(content);
+      const url = URL.createObjectURL(content);
+      a.href = url;
       a.download = 'images_without_metadata.zip';
       document.body.appendChild(a);
       a.click();
       a.remove();
-      setTimeout(()=>URL.revokeObjectURL(a.href), 10);
+      setTimeout(()=>URL.revokeObjectURL(url), 10);
       setStatus('Done. ✅');
       statusEl.classList.add('success');
       setTimeout(()=>statusEl.classList.remove('success'), 1200);
@@ -388,13 +430,11 @@
       const url = URL.createObjectURL(file);
       try {
         const { bitmap, width, height, closeBitmap } = await loadBitmap(url);
-
         const maxPixels = MAX_MEGA_PIXELS * 1_000_000;
         const { targetW, targetH } = fitWithinPixels(width, height, maxPixels);
 
         const canvas = createCanvas(targetW, targetH);
         const ctx = canvas.getContext('2d', { alpha: false });
-
         ctx.drawImage(bitmap, 0, 0, targetW, targetH);
 
         const out = await canvasToJpeg(canvas, JPEG_QUALITY);
@@ -447,8 +487,7 @@
       });
     }
 
-    // ======= p5.js Wave (Interaction Design flair) =======
-    // Shows only while processingActive === true
+    // ===== p5.js Wave (shows while processingActive === true)
     window.addEventListener('load', () => {
       new p5((p) => {
         let t = 0;
@@ -464,13 +503,12 @@
           p.resizeCanvas(w, h);
         };
         p.draw = function(){
-          if (!processingActive) { // freeze frame when inactive
+          if (!processingActive) {
             p.clear();
             return;
           }
-          p.background(0,0); // transparent
+          p.background(0,0);
           p.noFill();
-          // 3 layered waves
           for (let k=0; k<3; k++){
             const amp  = 10 + k*6;
             const freq = 0.012 + k*0.004;
@@ -488,6 +526,56 @@
         };
       });
     });
+
+    // ===== Logo -> Modal wiring (accessible)
+    (function(){
+      const logo = document.getElementById('sodaro-logo');
+      const modal = document.getElementById('rights-modal');
+      const closeBtn = document.getElementById('modal-close');
+      let lastFocus = null;
+
+      function openModal(){
+        lastFocus = document.activeElement;
+        modal.classList.add('show');
+        closeBtn.focus();
+        document.body.style.overflow = 'hidden';
+        document.addEventListener('focus', trapFocus, true);
+        document.addEventListener('keydown', onKeyDown);
+        modal.addEventListener('click', onBackdropClick);
+      }
+      function closeModal(){
+        modal.classList.remove('show');
+        document.body.style.overflow = '';
+        document.removeEventListener('focus', trapFocus, true);
+        document.removeEventListener('keydown', onKeyDown);
+        modal.removeEventListener('click', onBackdropClick);
+        lastFocus && lastFocus.focus();
+      }
+      function onBackdropClick(e){
+        if (e.target === modal) closeModal();
+      }
+      function onKeyDown(e){
+        if (e.key === 'Escape') closeModal();
+        if (e.key === 'Tab') {
+          const f = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+          if (!f.length) return;
+          const first = f[0], last = f[f.length - 1];
+          if (e.shiftKey && document.activeElement === first){ last.focus(); e.preventDefault(); }
+          else if (!e.shiftKey && document.activeElement === last){ first.focus(); e.preventDefault(); }
+        }
+      }
+      function trapFocus(e){
+        if (!modal.classList.contains('show')) return;
+        if (!modal.contains(e.target)) { e.stopPropagation(); closeBtn.focus(); }
+      }
+
+      // Activate via click or keyboard
+      logo.addEventListener('click', openModal);
+      logo.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openModal(); }
+      });
+      closeBtn.addEventListener('click', closeModal);
+    })();
   </script>
 </body>
 </html>
