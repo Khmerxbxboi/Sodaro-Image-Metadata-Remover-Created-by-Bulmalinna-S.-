@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  />
+  <title>Sodaro — Image Metadata Remover (Created by Bulmalinna S.)</title>
+
+  <!-- SEO -->
+  <meta name="description" content="Sodaro: Free, fast, mobile-friendly tool to remove EXIF/metadata from images in your browser and download a clean ZIP. Created by Bulmalinna S." />
+  <link rel="canonical" href="https://example.com/sodaro-image-metadata-remover" />
+  <meta name="robots" content="index,follow,max-image-preview:large" />
+  <meta name="author" content="Bulmalinna S." />
+
+  <!-- Open Graph / Twitter -->
+  <meta property="og:title" content="Sodaro — Image Metadata Remover" />
+  <meta property="og:description" content="Strip EXIF/metadata client-side and download a clean ZIP. Created by Bulmalinna S." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://example.com/sodaro-image-metadata-remover" />
+  <meta property="og:image" content="https://example.com/og-card-sodaro.jpg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Sodaro — Image Metadata Remover" />
+  <meta name="twitter:description" content="Strip EXIF/metadata client-side and download a clean ZIP." />
+  <meta name="twitter:image" content="https://example.com/og-card-sodaro.jpg" />
+
+  <!-- Schema.org JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@type":"WebApplication",
+    "name":"Sodaro — Image Metadata Remover",
+    "url":"https://example.com/sodaro-image-metadata-remover",
+    "applicationCategory":"Multimedia",
+    "operatingSystem":"Web",
+    "creator":{"@type":"Person","name":"Bulmalinna S."},
+    "description":"Remove EXIF/metadata from images locally in your browser and download as a ZIP.",
+    "potentialAction":{
+      "@type":"Action",
+      "name":"Remove Image Metadata",
+      "target":"https://example.com/sodaro-image-metadata-remover"
+    }
+  }
+  </script>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+  <!-- Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.min.js" defer></script>
+
+  <style>
+    :root{
+      --bg: #0b1020;
+      --card: #121833;
+      --ink: #e7ecff;
+      --ink-dim:#b6c0ff;
+      --accent:#4aa0ff;
+      --accent-2:#7ed3ff;
+      --muted:#303b6b;
+      --ok:#39d98a;
+      --danger:#ff5d6c;
+    }
+    @media (prefers-color-scheme: light) {
+      :root{
+        --bg: #f5f7ff;
+        --card:#ffffff;
+        --ink:#0e1328;
+        --ink-dim:#394166;
+        --accent:#2a66ff;
+        --accent-2:#00a8ff;
+        --muted:#e6ebff;
+        --ok:#18a871;
+        --danger:#cc3b4a;
+      }
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+      background:radial-gradient(1200px 800px at 80% -10%, rgba(74,160,255,.18), transparent 60%),
+                 radial-gradient(1000px 700px at -10% 110%, rgba(0,168,255,.12), transparent 60%),
+                 var(--bg);
+      color:var(--ink);
+      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+      display:flex; align-items:center; justify-content:center; padding:24px;
+    }
+    .wrap{
+      width:100%; max-width:980px; margin:auto;
+      display:grid; gap:20px;
+      grid-template-columns:1fr;
+    }
+    header{
+      background: linear-gradient(135deg, rgba(74,160,255,.2), rgba(126,211,255,.06));
+      border:1px solid rgba(255,255,255,.08);
+      backdrop-filter: blur(8px);
+      border-radius:20px; padding:24px;
+      box-shadow: 0 8px 30px rgba(0,0,0,.25);
+    }
+    header h1{
+      margin:0; font-size:clamp(1.4rem, 2.2vw + 1rem, 2.4rem);
+      font-weight:800; letter-spacing:.2px;
+    }
+    header p{
+      margin:.6rem 0 0; color:var(--ink-dim);
+      font-size:clamp(.95rem, .5vw + .7rem, 1.05rem);
+    }
+    .grid{
+      display:grid; gap:20px;
+      grid-template-columns:1fr;
+    }
+    @media (min-width: 860px){
+      .grid{ grid-template-columns: 1.6fr .9fr; }
+    }
+
+    .card{
+      background:var(--card); border:1px solid rgba(255,255,255,.06);
+      border-radius:16px; padding:18px;
+      box-shadow: 0 6px 18px rgba(0,0,0,.18);
+    }
+    .label{ font-weight:600; color:var(--ink); margin-bottom:8px }
+
+    /* BIG CTA button zone */
+    .drop{
+      border:2px dashed var(--muted);
+      border-radius:18px; padding:22px;
+      text-align:center; transition:.2s ease;
+      background:rgba(0,0,0,.05);
+    }
+    .drop.dragover{
+      border-color:var(--accent); background:rgba(74,160,255,.08);
+      transform: translateY(-1px);
+    }
+    .drop p{ margin:.45rem 0; color:var(--ink-dim) }
+    input[type="file"]{ display:none }
+
+    .cta {
+      display:inline-flex; align-items:center; gap:12px;
+      margin:10px auto 6px; padding:16px 22px;
+      border-radius:16px; font-weight:800; font-size:1.05rem;
+      background:linear-gradient(180deg, var(--accent), var(--accent-2));
+      color:#fff; border:none; cursor:pointer;
+      box-shadow:0 12px 28px rgba(42,102,255,.40);
+      transition: transform .06s ease, box-shadow .2s ease;
+    }
+    .cta:active { transform: translateY(1px); box-shadow:0 6px 18px rgba(42,102,255,.3) }
+    .cta svg { width:26px; height:26px; flex:0 0 26px }
+
+    .actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:16px }
+    .btn{
+      appearance:none; border:1px solid transparent; cursor:pointer;
+      border-radius:12px; padding:12px 16px; font-weight:600;
+      background:linear-gradient(180deg, var(--accent), var(--accent-2));
+      color:#fff; box-shadow:0 8px 18px rgba(42,102,255,.35);
+      transition: transform .06s ease, box-shadow .2s ease;
+    }
+    .btn:active{ transform: translateY(1px); box-shadow:0 3px 10px rgba(42,102,255,.25) }
+
+    .muted-btn{
+      background:transparent; color:var(--ink);
+      border-color:var(--muted);
+    }
+
+    .status{
+      margin-top:10px; color:var(--ink-dim); font-size:.95rem; min-height:1.3em;
+      word-break: break-word;
+    }
+
+    /* Wave zone */
+    #wave-holder { height:120px; border-radius:12px; overflow:hidden; margin-top:10px; border:1px dashed var(--muted); }
+    .wave-off { display:none; }
+
+    .donate{
+      display:grid; grid-template-columns: 88px 1fr; gap:14px; align-items:center;
+    }
+    .qr{
+      width:88px; height:88px; border-radius:12px; overflow:hidden;
+      background:#fff; display:grid; place-items:center; border:1px solid #dfe6ff;
+    }
+    .qr img{ width:100%; height:100%; object-fit:cover }
+    .small{
+      font-size:.92rem; color:var(--ink-dim); margin:.25rem 0 .6rem;
+    }
+
+    .success{ color:var(--ok) }
+    .error{ color:var(--danger) }
+    footer{ text-align:center; color:var(--ink-dim); margin-top:8px; font-size:.9rem }
+    footer a{ color:var(--accent-2); text-decoration:underline; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <h1>Sodaro — Image Metadata Remover</h1>
+      <p>Strip EXIF/metadata locally in your browser and download a clean ZIP. Created by <strong>Bulmalinna S.</strong></p>
+    </header>
+
+    <section class="grid">
+      <!-- Tool -->
+      <div class="card">
+        <div class="label">Your images</div>
+
+        <label for="file-input" class="drop" id="drop-zone" tabindex="0" role="button" aria-label="Choose or drop images">
+          <input id="file-input" type="file" accept="image/*" multiple />
+          <!-- BIG ICON CTA -->
+          <button type="button" class="cta" id="cta-pick">
+            <!-- Cloud upload SVG icon -->
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path fill="currentColor" d="M19 18a4 4 0 0 0 0-8c-.2 0-.4 0-.6.04A6 6 0 0 0 6.1 10c-.07 0-.14 0-.21 0A4.9 4.9 0 0 0 1 15a5 5 0 0 0 5 5h13zM12 7l4 4h-3v5h-2v-5H8l4-4z"/>
+            </svg>
+            <span>CLICK HERE TO CHOOSE IMAGES OR AN IMAGE</span>
+          </button>
+          <p>…or drop your images here</p>
+          <p class="small">Large files supported. Metadata is removed on-device (nothing is uploaded).</p>
+        </label>
+
+        <div class="actions">
+          <button class="btn" id="download-button">Download ZIP (No Metadata)</button>
+          <button class="btn muted-btn" id="clear-button" type="button">Clear Selection</button>
+        </div>
+
+        <div class="status" id="status" aria-live="polite"></div>
+        <div id="wave-holder" class="wave-off" aria-hidden="true"></div>
+      </div>
+
+      <!-- Donate -->
+      <aside class="card">
+        <div class="label">Support the project</div>
+        <div class="donate">
+          <div class="qr">
+            <!-- Replace with your hosted QR filename/URL -->
+            <img src="qrcode .png" alt="Donate via PayPal QR">
+          </div>
+          <div>
+            <div><strong>If you want to donate, hit me up on PayPal.</strong></div>
+            <div class="small">Scan the QR or click the button below.</div><br>
+            <a class="btn" href="https://www.paypal.com/" target="_blank" rel="noopener noreferrer">Donate via PayPal</a>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <footer>
+      © <span id="year"></span> Sodaro • Built with care by Bulmalinna S. — Thank you and a backlink to
+      <a href="https://www.jayaproduction.com" target="_blank" rel="noopener">www.jayaproduction.com</a>
+    </footer>
+  </main>
+
+  <script>
+    // ======= Robust client-side metadata remover & zipper =======
+    const MAX_MEGA_PIXELS = 40;  // ~40MP safety cap
+    const JPEG_QUALITY    = 0.92;
+
+    const fileInput    = document.getElementById('file-input');
+    const dropZone     = document.getElementById('drop-zone');
+    const statusEl     = document.getElementById('status');
+    const downloadBtn  = document.getElementById('download-button');
+    const clearBtn     = document.getElementById('clear-button');
+    const ctaPickBtn   = document.getElementById('cta-pick');
+    const waveHolder   = document.getElementById('wave-holder');
+    let processingActive = false;
+
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // --- Drag & drop UI
+    ;['dragenter','dragover'].forEach(evt => {
+      dropZone.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); dropZone.classList.add('dragover'); });
+    });
+    ;['dragleave','drop'].forEach(evt => {
+      dropZone.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); dropZone.classList.remove('dragover'); });
+    });
+    dropZone.addEventListener('drop', e => {
+      const dtFiles = Array.from(e.dataTransfer.files || []);
+      if (dtFiles.length) fileInput.files = toFileList(dtFiles);
+      announceSelection();
+    });
+    dropZone.addEventListener('click', (e) => {
+      // If the click is inside but not on the CTA, still open picker
+      if (e.target !== ctaPickBtn) fileInput.click();
+    });
+    dropZone.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); }
+    });
+    ctaPickBtn.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', announceSelection);
+    function announceSelection(){
+      const n = fileInput.files?.length || 0;
+      setStatus(n ? `Selected ${n} file${n>1?'s':''}.` : 'No files selected.');
+    }
+
+    clearBtn.addEventListener('click', () => {
+      fileInput.value = '';
+      setStatus('Selection cleared.');
+    });
+
+    downloadBtn.addEventListener('click', handleDownload);
+
+    async function handleDownload(){
+      const files = fileInput.files;
+      if (!files || !files.length) {
+        alert('Please select images first.');
+        return;
+      }
+      const images = Array.from(files).filter(f => /^image\//i.test(f.type));
+      if (!images.length) { alert('No valid images found.'); return; }
+
+      setProcessing(true);
+      setStatus(`Processing ${images.length} image(s)...`);
+
+      const zip = new JSZip();
+      // Process sequentially to keep memory stable
+      for (let i = 0; i < images.length; i++){
+        const file = images[i];
+        try {
+          setStatus(`Processing ${i+1}/${images.length}: ${file.name}`);
+          const blob = await processImage(file);
+          const name = (sanitizeName(file.name).replace(/\.[^.]+$/, '') || `image_${i+1}`) + '.jpg';
+          zip.file(name, blob);
+        } catch (err){
+          console.error(err);
+          setStatus(`Skipped ${file.name}: ${err.message || 'failed to process'}`);
+          statusEl.classList.add('error');
+          setTimeout(()=>statusEl.classList.remove('error'), 1400);
+        }
+      }
+
+      setStatus('Building ZIP...');
+      const content = await zip.generateAsync({
+        type: 'blob',
+        compression: 'DEFLATE',
+        compressionOptions: { level: 6 }
+      });
+
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(content);
+      a.download = 'images_without_metadata.zip';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(()=>URL.revokeObjectURL(a.href), 10);
+      setStatus('Done. ✅');
+      statusEl.classList.add('success');
+      setTimeout(()=>statusEl.classList.remove('success'), 1200);
+      setProcessing(false);
+    }
+
+    function setProcessing(active){
+      processingActive = active;
+      if (active){
+        waveHolder.classList.remove('wave-off');
+        waveHolder.setAttribute('aria-hidden', 'false');
+      } else {
+        waveHolder.classList.add('wave-off');
+        waveHolder.setAttribute('aria-hidden', 'true');
+      }
+    }
+
+    function sanitizeName(name){ return (name||'').replace(/[^\w.\-]+/g,'_').slice(0,180); }
+    function setStatus(msg){ statusEl.textContent = msg; }
+
+    function toFileList(files){
+      const dt = new DataTransfer();
+      files.forEach(f => dt.items.add(f));
+      return dt.files;
+    }
+
+    async function processImage(file){
+      const url = URL.createObjectURL(file);
+      try {
+        const { bitmap, width, height, closeBitmap } = await loadBitmap(url);
+
+        const maxPixels = MAX_MEGA_PIXELS * 1_000_000;
+        const { targetW, targetH } = fitWithinPixels(width, height, maxPixels);
+
+        const canvas = createCanvas(targetW, targetH);
+        const ctx = canvas.getContext('2d', { alpha: false });
+
+        ctx.drawImage(bitmap, 0, 0, targetW, targetH);
+
+        const out = await canvasToJpeg(canvas, JPEG_QUALITY);
+        closeBitmap?.();
+        return out;
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+    }
+
+    function fitWithinPixels(w, h, maxPixels){
+      const px = w * h;
+      if (px <= maxPixels) return { targetW: w, targetH: h };
+      const s = Math.sqrt(maxPixels / px);
+      return { targetW: Math.max(1, Math.floor(w*s)), targetH: Math.max(1, Math.floor(h*s)) };
+    }
+
+    function createCanvas(w, h){
+      if (typeof OffscreenCanvas !== 'undefined') return new OffscreenCanvas(w, h);
+      const c = document.createElement('canvas'); c.width = w; c.height = h; return c;
+    }
+
+    function canvasToJpeg(canvas, quality){
+      return new Promise((resolve, reject) => {
+        if (canvas.convertToBlob){
+          canvas.convertToBlob({ type:'image/jpeg', quality }).then(resolve, reject);
+        } else {
+          canvas.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), 'image/jpeg', quality);
+        }
+      });
+    }
+
+    async function loadBitmap(url){
+      if (typeof createImageBitmap === 'function'){
+        const blob = await fetch(url).then(r=>r.blob());
+        const bmp = await createImageBitmap(blob);
+        return { bitmap:bmp, width:bmp.width, height:bmp.height, closeBitmap: () => bmp.close?.() };
+      }
+      const img = await loadImageElement(url);
+      return { bitmap:img, width:img.naturalWidth, height:img.naturalHeight, closeBitmap:null };
+    }
+
+    function loadImageElement(url){
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error('Image load failed'));
+        img.src = url;
+        if (img.decode) { img.decode().catch(()=>{/* onload fallback */}); }
+      });
+    }
+
+    // ======= p5.js Wave (Interaction Design flair) =======
+    // Shows only while processingActive === true
+    window.addEventListener('load', () => {
+      new p5((p) => {
+        let t = 0;
+        p.setup = function(){
+          const w = waveHolder.clientWidth || 600;
+          const h = waveHolder.clientHeight || 120;
+          const cnv = p.createCanvas(w, h);
+          cnv.parent('wave-holder');
+        };
+        p.windowResized = function(){
+          const w = waveHolder.clientWidth || 600;
+          const h = waveHolder.clientHeight || 120;
+          p.resizeCanvas(w, h);
+        };
+        p.draw = function(){
+          if (!processingActive) { // freeze frame when inactive
+            p.clear();
+            return;
+          }
+          p.background(0,0); // transparent
+          p.noFill();
+          // 3 layered waves
+          for (let k=0; k<3; k++){
+            const amp  = 10 + k*6;
+            const freq = 0.012 + k*0.004;
+            const off  = k * 60;
+            p.stroke(126 + k*40, 211, 255, 180 - k*40);
+            p.strokeWeight(2 + k);
+            p.beginShape();
+            for (let x=0; x<p.width; x++){
+              const y = p.height/2 + Math.sin((x*freq) + t + off)*amp + Math.sin((x*freq*0.5) + t*1.6 + off)*amp*0.4;
+              p.vertex(x, y);
+            }
+            p.endShape();
+          }
+          t += 0.03;
+        };
+      });
+    });
+  </script>
+</body>
+</html>
